@@ -8,14 +8,12 @@
 
 
 import fciUtils
-import MySQLdb
-import config
 import pdb
 
 def updateFci():
     '''updates the fciindex table '''
     # connect to the database
-    db = MySQLdb.connect(host=config.host,user=config.user, passwd= config.password, db = config.database);
+    db = fciUtils.connect_fci_db()
     cur = db.cursor()
     # clear up the fciIndex table
     cur.execute("TRUNCATE fciIndex")
@@ -29,7 +27,7 @@ def updateFci():
     for value in data:
         # calculate index
         value = value[0]
-        fci = fciUtils.fciIndex(value)
+        fci = fciUtils.fci_index(value)
         cur.execute("INSERT INTO fciIndex (Postcode,FCI) VALUES (%s,%s)", (value,fci))
         db.commit()
     db.close()

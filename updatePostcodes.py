@@ -6,10 +6,6 @@
 '''
 
 
-
-
-import MySQLdb
-import config
 import fciUtils
 import pdb
 
@@ -17,7 +13,7 @@ import pdb
 # parse the file with the etree library
 
 # connect to database
-db = MySQLdb.connect(host=config.host,user=config.user, passwd= config.password, db = config.database);
+db = fciUtils.connect_fci_db()
 # creating cursor object
 cur = db.cursor()
 cur.execute('TRUNCATE TABLE fci_data.postcodes')
@@ -27,7 +23,7 @@ db.commit()
 db.close()
 
 # connect to database
-db = MySQLdb.connect(host=config.host,user=config.user, passwd= config.password, db = config.database);
+db = fciUtils.connect_fci_db()
 # creating cursor object
 cur = db.cursor()
         
@@ -37,7 +33,7 @@ cur.execute('SELECT Area, URL FROM fci_data.sources')
 #pdb.set_trace()
 for area, url in cur.fetchall():
     # pass the url to an xmlparser function
-    tempDict = fciUtils.postcodesDict(url,area)
+    tempDict = fciUtils.postcodes_dict(url,area)
     valueList = tempDict.values()
     iterable = valueList[0]
     # parse the dict and write into database

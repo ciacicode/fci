@@ -13,7 +13,7 @@ import MySQLdb
 import pdb
 
 
-def postToArea(postcode):
+def post_to_area(postcode):
     '''takes a postcode, returns area code'''
     # normalise user input
     postcode = postcode.upper()
@@ -25,8 +25,12 @@ def postToArea(postcode):
     else:
         return postcode
 
+def connect_fci_db():
+    '''handles mysql db connection to fci database'''
+    return MySQLdb.connect(host=config.host,user=config.user, passwd= config.password, db = config.database);
 
-def postcodesDict (url, areaName):
+
+def postcodes_dict (url, areaName):
     ''' takes url of xml and area name
         output dict as {'area':{'unique postcodes'}}
     '''
@@ -41,7 +45,7 @@ def postcodesDict (url, areaName):
     for detail in collection.findall('EstablishmentDetail'):
         postCode = detail.findtext('PostCode')
         if postCode is not None:
-            zonePostcode = postToArea(postCode)
+            zonePostcode = post_to_area(postCode)
             #add postcodes to nested list
             nestList.append(zonePostcode)
 
@@ -74,17 +78,18 @@ def resourcesDict(url):
         resourcesDict[entry['description']] = nestDict
     return resourcesDict
 
-def findXml(postcode):
+def find_xml(postcode):
     '''
        input a postcode returns dict of
        xml URL of area(s)
     '''
     # connect to database
-    pPostcode = postToArea(postcode)
-    db = MySQLdb.connect(host=config.host,user=config.user, passwd= config.password, db = config.database);
+    pPostcode = post_to_area(postcode)
+    db = connect_fci_db()
     cur = db.cursor()
     cur.execute('SELECT Area FROM fci_data.ordered_postcodes WHERE Postcode=(%s)',[pPostcode])
     db.commit()
+    # create lists for the output
     nestAreaList=[]
     outputAreaList = []
     for item in cur.fetchall():
@@ -102,20 +107,22 @@ def findXml(postcode):
         for entry in cur.fetchall():
            outputXmlDict[item] = entry
     return outputXmlDict
-    db.close()
+    finally db.close()
 
-def fciIndex(postcode):
+def fci_index(postcode):
     '''
         requires postcode
         returns fciindex
     '''
 
     # create fci counter
-    fciIndex = 0
-    zoneInput = postToArea(postcode)
+    fci_count = 0
+    fci_index = 0
+    restaurant_count = 0
+    zone_input = post_to_area(postcode)
     keys = ("CHICKEN", "CHICK")
-    noKeys = "NANDO"
-    xmlDict = findXml(zoneInput)
+    no_keys = "NANDO"
+    xmlDict = find_xml(zone_input)
     # unpack URLs from xmlDict
     for value in xmlDict.values():
         # each value is a tuple
@@ -125,34 +132,34 @@ def fciIndex(postcode):
         root = tree.getroot()
         collection = root.find('EstablishmentCollection')
         for detail in collection.findall('EstablishmentDetail'):
-            postCode = detail.findtext('PostCode')
-            if postCode is not None:
-                zoneXML = postToArea(postCode)
-                if zoneInput == zoneXML:
-                    businessName = detail.find('BusinessName').text
-                    upperBusinessName = businessName.upper()
-                    pdb.set_trace()
-                    if upperBusinessName == '':
+            postcode = detail.findtext('PostCode')
+            if postcode is not None:
+                zone_xml = post_to_area(postcode)
+                if zone_input == zone_xml:
+                    restaurant_count = restaurant_count + 1
+                    business_name = detail.find('BusinessName').text
+                    upper_business_name = business_name.upper()
+                    if upper_business_name == '':
                         break
-                    elif noKeys in upperBusinessName:
+                    elif no_keys in upper_business_name:
                         break
                     else:
                         for key in  keys:
-                            if key in upperBusinessName:
-                                fciIndex = fciIndex + 1
+                            if key in upper_business_name:
+                                fci_count = fci_count + 1
+    fci_index = fci_count/restaurant_count
+    return fci_index
 
-    return fciIndex
 
-
-def fciReturn(postcode):
+def fci_return(postcode):
     '''
     receives postcode
     returns fci
     '''
     # normalise input
-    postcode = postToArea(postcode)
+    postcode = post_to_area(postcode)
     # connect to database and create cursor
-    db = MySQLdb.connect(host=config.host,user=config.user, passwd= config.password, db = config.database);
+    db = connect_fci_db()
     cur = db.cursor()
     # check if there is already an entry in the database for that postcode
     # pdb.set_trace()
@@ -166,4 +173,4 @@ def fciReturn(postcode):
         data = data[0]
         data = data[0]
         return str(data)
-    db.close()
+    finally db.close()

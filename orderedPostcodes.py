@@ -5,12 +5,10 @@
 '''
 
 
-import MySQLdb
-import config
 import fciUtils
 import pdb
 
-db = MySQLdb.connect(host=config.host,user=config.user, passwd= config.password, db = config.database);
+db = fciUtils.connect_fci_db()
 cur = db.cursor()
 cur.execute('TRUNCATE TABLE fci_data.ordered_postcodes')
 
