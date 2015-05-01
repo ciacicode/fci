@@ -70,7 +70,6 @@ def resourcesDict(url):
         if key == 'resources':
             #dive into the resources
             resourcesList = jsonDecoded['resources']
-
     for entry in resourcesList:
         nestDict = {}
         nestDict['last_modified'] = entry['last_modified']
@@ -104,10 +103,11 @@ def find_xml(postcode):
     for item in outputAreaList:
         cur.execute('SELECT URL FROM fci_data.sources WHERE Area =(%s)',[item])
         db.commit()
-        for entry in cur.fetchall():
+        entries = cur.fecthall()
+        db.close()
+        for entry in entries:
            outputXmlDict[item] = entry
     return outputXmlDict
-    finally db.close()
 
 def fci_index(postcode):
     '''
@@ -166,6 +166,7 @@ def fci_return(postcode):
     cur.execute("SELECT FCI FROM fciIndex WHERE Postcode=(%s)", [postcode])
     db.commit()
     data = cur.fetchall()
+    db.close()
     if len(data) == 0:
         error = 'There is no FCI data for this area'
         return str(error)
@@ -173,4 +174,4 @@ def fci_return(postcode):
         data = data[0]
         data = data[0]
         return str(data)
-    finally db.close()
+
