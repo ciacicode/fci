@@ -103,10 +103,9 @@ def find_xml(postcode):
     for item in outputAreaList:
         cur.execute('SELECT URL FROM fci_data.sources WHERE Area =(%s)',[item])
         db.commit()
-        entries = cur.fecthall()
-        db.close()
-        for entry in entries:
+        for entry in cur.fetchall():
            outputXmlDict[item] = entry
+    db.close()
     return outputXmlDict
 
 def fci_index(postcode):
@@ -136,7 +135,6 @@ def fci_index(postcode):
             if postcode is not None:
                 zone_xml = post_to_area(postcode)
                 if zone_input == zone_xml:
-                    restaurant_count = restaurant_count + 1
                     business_name = detail.find('BusinessName').text
                     upper_business_name = business_name.upper()
                     if upper_business_name == '':
@@ -146,9 +144,10 @@ def fci_index(postcode):
                     else:
                         for key in  keys:
                             if key in upper_business_name:
+                                #pdb.set_trace()
                                 fci_count = fci_count + 1
-    fci_index = fci_count/restaurant_count
-    return fci_index
+                                break
+    return fci_count
 
 
 def fci_return(postcode):

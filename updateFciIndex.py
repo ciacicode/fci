@@ -22,6 +22,7 @@ def updateFci():
     # pdb.set_trace()
     cur.execute("SELECT Postcode FROM ordered_postcodes")
     db.commit()
+    pdb.set_trace()
     data = cur.fetchall()
     data = sorted(set(data))
     for value in data:
