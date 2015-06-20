@@ -22,13 +22,12 @@ def updateFci():
     # pdb.set_trace()
     cur.execute("SELECT Postcode FROM ordered_postcodes")
     db.commit()
-    pdb.set_trace()
     data = cur.fetchall()
     data = sorted(set(data))
     for value in data:
         # calculate index
         value = value[0]
-        fci = fciUtils.fci_index(value)
+        fci = fciUtils.fci_calculate(value)
         cur.execute("INSERT INTO fciIndex (Postcode,FCI) VALUES (%s,%s)", (value,fci))
         db.commit()
     db.close()

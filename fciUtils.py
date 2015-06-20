@@ -3,13 +3,14 @@
 
     by ciacicode
 '''
-
+from __future__ import division
 import xml.etree.ElementTree as ET
-from urllib import urlopen
+from urllib2 import urlopen
 import json
 import re
 import config
 import MySQLdb
+
 import pdb
 
 
@@ -108,10 +109,11 @@ def find_xml(postcode):
     db.close()
     return outputXmlDict
 
-def fci_index(postcode):
+def fci_calculate(postcode):
     '''
         requires postcode
         returns fciindex
+        and updates database
     '''
 
     # create fci counter
@@ -135,6 +137,7 @@ def fci_index(postcode):
             if postcode is not None:
                 zone_xml = post_to_area(postcode)
                 if zone_input == zone_xml:
+                    restaurant_count = restaurant_count + 1
                     business_name = detail.find('BusinessName').text
                     upper_business_name = business_name.upper()
                     if upper_business_name == '':
@@ -144,10 +147,13 @@ def fci_index(postcode):
                     else:
                         for key in  keys:
                             if key in upper_business_name:
-                                #pdb.set_trace()
                                 fci_count = fci_count + 1
                                 break
-    return fci_count
+    if restaurant_count == 0:
+        return fci_count
+    else:
+        result = fci_count/restaurant_count
+        return result
 
 
 def fci_return(postcode):
@@ -167,10 +173,10 @@ def fci_return(postcode):
     data = cur.fetchall()
     db.close()
     if len(data) == 0:
-        error = 'There is no FCI data for this area'
-        return str(error)
+        no_data = 'There is no FCI data for this area'
+        return str(no_data)
     else:
         data = data[0]
         data = data[0]
-        return str(data)
+        return "{0:.3f}%".format(data * 100)
 
