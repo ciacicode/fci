@@ -113,7 +113,6 @@ def fci_calculate(postcode):
     '''
         requires postcode
         returns fciindex
-        and updates database
     '''
 
     # create fci counter
