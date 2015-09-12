@@ -30,10 +30,9 @@ cur = db.cursor()
 # execute insert query
 cur.execute('SELECT Area, URL FROM fci_data.sources')
 
-#pdb.set_trace()
 for area, url in cur.fetchall():
     # pass the url to an xmlparser function
-    tempDict = fciUtils.postcodes_dict(url,area)
+    tempDict = fciUtils.postcodes_dict(url, area)
     valueList = tempDict.values()
     iterable = valueList[0]
     # parse the dict and write into database
@@ -42,7 +41,7 @@ for area, url in cur.fetchall():
             break
         else:
             # execute insert query
-            cur.execute('INSERT INTO postcodes (Postcode,Area) VALUES (%s,%s)',(value,area))
+            cur.execute('INSERT INTO postcodes (Postcode,Area) VALUES (%s,%s)', (value, area))
             # commit query
             db.commit()
             # close connection
