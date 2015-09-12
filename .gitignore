@@ -69,3 +69,4 @@ config.py
 #Databases
 
 *.db
+*.cfg

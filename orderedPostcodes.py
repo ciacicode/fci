@@ -6,7 +6,7 @@
 import fciUtils
 import pdb
 
-db = fciUtils.connect_fci_db()
+db = fciUtils.create_session()
 cur = db.cursor()
 cur.execute('TRUNCATE TABLE fci_data.ordered_postcodes')
 cur.execute('SELECT Postcode, Area FROM fci_data.postcodes ORDER BY Postcode')

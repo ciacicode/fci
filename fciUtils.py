@@ -10,6 +10,7 @@ import json
 import re
 import config
 import MySQLdb
+from database import *
 import pdb
 
 
@@ -24,11 +25,6 @@ def post_to_area(postcode):
         return postcode
     else:
         return postcode
-
-
-def connect_fci_db():
-    """handles mysql db connection to fci database"""
-    return MySQLdb.connect(host=config.host, user=config.user, passwd=config.password, db=config.database);
 
 
 def postcodes_dict(url, area_name):
@@ -86,31 +82,9 @@ def find_xml(postcode):
        input a postcode returns dict of
        xml URL of area(s)
     """
-    # connect to database
     p_postcode = post_to_area(postcode)
-    db = connect_fci_db()
-    cur = db.cursor()
-    cur.execute('SELECT Area FROM fci_data.ordered_postcodes WHERE Postcode=(%s)', [p_postcode])
-    db.commit()
-    # create lists for the output
-    nest_area_list = list()
-    output_area_list = list()
-    for item in cur.fetchall():
-        nest_area_list.append(item)
-        for i in nest_area_list:
-            for x in i:
-                output_area_list.append(x)
-    output_area_list = set(output_area_list)
-    output_area_list = list(output_area_list)
-    # let us find the URLs of the xml data from the
-    output_xml_dict = dict()
-    for item in output_area_list:
-        cur.execute('SELECT URL FROM fci_data.sources WHERE Area =(%s)', [item])
-        db.commit()
-        for entry in cur.fetchall():
-            output_xml_dict[item] = entry
-    db.close()
-    return output_xml_dict
+    url_xml = FciSources.query.filter_by(area=p_postcode).first()
+    return url_xml
 
 
 def fci_calculate(postcode):
@@ -166,20 +140,9 @@ def fci_return(postcode):
     """
     # normalise input
     postcode = post_to_area(postcode)
-    # connect to database and create cursor
-    db = connect_fci_db()
-    cur = db.cursor()
-    # check if there is already an entry in the database for that postcode
-    # pdb.set_trace()
-    cur.execute("SELECT FCI FROM fciIndex WHERE Postcode=(%s)", [postcode])
-    db.commit()
-    data = cur.fetchall()
-    db.close()
-    if len(data) == 0:
-        no_data = 'There is no FCI data for this area'
-        return str(no_data)
+    fci = FciIndex.query.filter_by(postcode=postcode).first()
+    if fci is None:
+        return 'There is no FCI for this area'
     else:
-        data = data[0]
-        data = data[0]
-        return "{0:.3f}%".format(data * 100)
+        return "{0:.3f}%".format(fci * 100)
 

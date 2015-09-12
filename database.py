@@ -4,7 +4,7 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/maria/Desktop/ciacicode/fci/test.db'
+app.config.from_pyfile('fci.cfg')
 db = SQLAlchemy(app)
 
 
@@ -50,9 +50,9 @@ class FciIndex(db.Model):
         Database Model of the fried chicken index and the
         related area postcode
     """
-    postcode = db.Column(db.String(20, primary_key=True))
+    postcode = db.Column(db.String(20), primary_key=True)
     fci = db.Column(db.Float, unique=True)
-    date = db.Column(db.Date, unique=True)
+    date = db.Column(db.DateTime, unique=True)
 
     def __init__(self, postcode, fci, date):
         self.postcode = postcode

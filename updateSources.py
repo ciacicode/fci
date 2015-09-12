@@ -6,6 +6,7 @@
 '''
 
 import fciUtils
+from database import *
 
 
 def update_sources():
@@ -16,7 +17,6 @@ def update_sources():
     json = 'http://data.gov.uk/api/2/rest/package/uk-food-hygiene-rating-data'
     all_areas_data = fciUtils.resources_dict(json)
     '''This script aims to update all database tables so to provide a fresh data set'''
-    db = fciUtils.connect_fci_db()
     # creating cursor object
     cur = db.cursor()
     # execute insert query

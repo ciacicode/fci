@@ -10,6 +10,7 @@
 
 import fciUtils
 import operator
+from database import *
 import pdb
 
 
@@ -18,7 +19,6 @@ def update_fci():
         updates table containing the fci_index for
         each london area.
     """
-    db = fciUtils.connect_fci_db()
     cur = db.cursor()
     cur.execute("SELECT Postcode FROM ordered_postcodes")
     db.commit()

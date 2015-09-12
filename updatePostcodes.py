@@ -7,13 +7,13 @@
 
 
 import fciUtils
+from database import *
 import pdb
 
 # loop through the xml files in the database and update the postcode database
 # parse the file with the etree library
 
-# connect to database
-db = fciUtils.connect_fci_db()
+
 # creating cursor object
 cur = db.cursor()
 cur.execute('TRUNCATE TABLE fci_data.postcodes')
@@ -22,8 +22,6 @@ cur.execute('TRUNCATE TABLE fci_data.postcodes')
 db.commit()
 db.close()
 
-# connect to database
-db = fciUtils.connect_fci_db()
 # creating cursor object
 cur = db.cursor()
         
