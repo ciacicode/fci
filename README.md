@@ -11,30 +11,11 @@ The FCI is calculated based on instances of fried chicken shops in the area. The
 * Flask-SQLAlchemy
 
 ## Databases Tables
-|fci_data.sources|
+fci_data.sources|fci_data.postcodes|fci_data.ordered_postcodes|fci_data.fciIndex|
+----------------|------------------|--------------------------|-----------------|
 ```
-ID	int(11)
-Area	varchar(255)
-LastModified	varchar(255)
-URL	varchar(255)
-```|
-|fci_data.postcodes|
-```
-Postcode	varchar(15)
-Area	varchar(255)
-```|
-
-|fci_data.ordered_postcodes|
-```
-Postcode	varchar(15)
-Area	varchar(255)
-```|
-|fci_data.fciIndex|
-```
-Postcode	varchar(15)
-FCI	float
-```
-|
+ID	int(11) Area	varchar(255) LastModified	varchar(255) URL	varchar(255)```|
+``` Postcode	varchar(15) Area	varchar(255) ```|``` Postcode	varchar(15)Area	varchar(255)```|```Postcode	varchar(15) FCI	float```|
 
 ## List of custom libraries
 * fciUtils.py
