@@ -10,7 +10,7 @@ import json
 import re
 import config
 import MySQLdb
-from database import *
+from db_models import *
 import pdb
 
 

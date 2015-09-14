@@ -7,7 +7,7 @@
 
 
 import fciUtils
-from database import *
+from db_models import *
 import pdb
 
 # loop through the xml files in the database and update the postcode database

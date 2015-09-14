@@ -6,7 +6,7 @@
 '''
 
 import fciUtils
-from database import *
+from db_models import *
 
 
 def update_sources():
