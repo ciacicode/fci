@@ -10,7 +10,9 @@ import json
 import re
 import config
 import MySQLdb
-from db_models import *
+import db_models
+from datetime import datetime
+import string
 import pdb
 
 
@@ -54,27 +56,35 @@ def postcodes_dict(url, area_name):
     return output_dict
 
 
-def resources_dict(url):
+def resources_list(url):
     """
         input url of json formatted data
-        output dict
-        { 'area': {'last_modified', 'url'}}
+        output list
+        crete a list of FciSources database objects
     """
     read_data = urlopen(url)
     json_simple = json.load(read_data)
     json_encoded = json.dumps(json_simple)
     json_decoded = json.loads(json_encoded)
-    resources_dict= dict()
+    resources_list= list()
+    final_list = list()
     for key in json_decoded.keys():
         if key == 'resources':
             # dive into the resources
             resources_list = json_decoded['resources']
     for entry in resources_list:
-        nest_dict = dict()
-        nest_dict['last_modified'] = entry['last_modified']
-        nest_dict['url'] = entry['url']
-        resources_dict[entry['description']] = nest_dict
-    return resources_dict
+        last_modified = entry['last_modified']
+        # Remove the bloody T from the date
+        last_modified = string.split(last_modified,'T')
+        day = last_modified[0]
+        hours = last_modified[1]
+        dt_last_modified = day + " " + hours
+        dt_last_modified = datetime.strptime(dt_last_modified, "%Y-%m-%d %H:%M:%S.%f")
+        url = entry['url']
+        area = entry['description']
+        source = db_models.FciSources(area, url, dt_last_modified)
+        final_list.append(source)
+    return final_list
 
 
 def find_xml(postcode):
@@ -83,7 +93,7 @@ def find_xml(postcode):
        xml URL of area(s)
     """
     p_postcode = post_to_area(postcode)
-    url_xml = FciSources.query.filter_by(area=p_postcode).first()
+    url_xml = db_models.FciSources.query.filter_by(area=p_postcode).first()
     return url_xml
 
 
@@ -95,7 +105,6 @@ def fci_calculate(postcode):
 
     # create fci counter
     fci_count = 0
-    fci_index = 0
     restaurant_count = 0
     zone_input = post_to_area(postcode)
     keys = ("CHICKEN", "CHICK", "FRIED")
@@ -140,7 +149,7 @@ def fci_return(postcode):
     """
     # normalise input
     postcode = post_to_area(postcode)
-    fci = FciIndex.query.filter_by(postcode=postcode).first()
+    fci = db_models.FciIndex.query.filter_by(postcode=postcode).first()
     if fci is None:
         return 'There is no FCI for this area'
     else:

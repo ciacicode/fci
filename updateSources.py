@@ -5,8 +5,11 @@
     by ciacicode
 '''
 
+
 import fciUtils
-from db_models import *
+from flask import Flask
+from flask.ext.sqlalchemy import SQLAlchemy
+import db_models
 
 
 def update_sources():
@@ -15,16 +18,9 @@ def update_sources():
     """
     # json data
     json = 'http://data.gov.uk/api/2/rest/package/uk-food-hygiene-rating-data'
-    all_areas_data = fciUtils.resources_dict(json)
-    '''This script aims to update all database tables so to provide a fresh data set'''
-    # creating cursor object
-    cur = db.cursor()
-    # execute insert query
-    cur.execute('TRUNCATE TABLE fci_data.sources')
-    # commit query and close
-    db.commit()
-    # loop through the dictionary and store the xml data in the database
-    db_id = 0
+    all_areas_data = fciUtils.resources_list(json)
+    # drop fcisources table
+    db.drop_all(bind=['fci_sources'])
     for key , value in all_areas_data.items():
         # store the key
         temp_area = key
