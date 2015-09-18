@@ -16,7 +16,7 @@ class Locations(db.Model):
         Defines the columns and keys for Locations table
     """
     postcode = db.Column(db.String(10), db.ForeignKey('fci_index.postcode'))
-    fci_index = db.relationship('FciIndex', backref=db.backref('locations', lazy='dynamic'))
+    #fci_index = db.relationship('FciIndex', backref=db.backref('locations', lazy='dynamic'))
     area = db.Column(db.String(50), primary_key=True)
 
     def __init__(self, area, postcode):
@@ -69,7 +69,7 @@ class FciSources(db.Model):
 
 def update_sources():
     """
-        performs database update
+        performs database update of the FciSources table
     """
     # json data
     json = 'http://data.gov.uk/api/2/rest/package/uk-food-hygiene-rating-data'
@@ -81,3 +81,30 @@ def update_sources():
         db.session.add(s)
     db.session.commit()
 
+
+def update_locations():
+    """
+    performs database update of the Locations Table
+    """
+    # execute select query
+    pdb.set_trace()
+    results = db.session.query(FciSources.area, FciSources.url)
+    results = results.all()
+
+    for area, url in results:
+        # pass the url to an xmlparser function
+        tempDict = fciUtils.postcodes_dict(url, area)
+        valueList = tempDict.values()
+        iterable = valueList[0]
+        # parse the dict and write into database
+        for value in iterable:
+            if value == "":
+                break
+            else:
+                # execute insert query
+                cur.execute('INSERT INTO postcodes (Postcode,Area) VALUES (%s,%s)', (value, area))
+                # commit query
+                db.commit()
+                # close connection
+
+    db.close()
