@@ -15,9 +15,10 @@ class Locations(db.Model):
     """
         Defines the columns and keys for Locations table
     """
-    postcode = db.Column(db.String(10), db.ForeignKey('fci_index.postcode'))
+    id = db.Column(db.Integer, primary_key=True)
+    postcode = db.Column(db.String(10))
     #fci_index = db.relationship('FciIndex', backref=db.backref('locations', lazy='dynamic'))
-    area = db.Column(db.String(50), primary_key=True)
+    area = db.Column(db.String(50))
 
     def __init__(self, area, postcode):
         self.area = area
@@ -33,8 +34,8 @@ class FciIndex(db.Model):
     """
     id = db.Column(db.Integer, primary_key=True)
     postcode = db.Column(db.String(10), index=True)
-    fci = db.Column(db.Float, unique=True)
-    date = db.Column(db.DateTime, unique=True)
+    fci = db.Column(db.Float)
+    date = db.Column(db.DateTime)
 
     def __init__(self, postcode, fci, date=None):
         self.postcode = postcode
@@ -87,24 +88,23 @@ def update_locations():
     performs database update of the Locations Table
     """
     # execute select query
-    pdb.set_trace()
+
     results = db.session.query(FciSources.area, FciSources.url)
     results = results.all()
 
     for area, url in results:
         # pass the url to an xmlparser function
-        tempDict = fciUtils.postcodes_dict(url, area)
-        valueList = tempDict.values()
-        iterable = valueList[0]
+        temp_dict = fciUtils.postcodes_dict(url, area)
+        value_list = temp_dict.values()
+        iterable = value_list[0]
         # parse the dict and write into database
         for value in iterable:
             if value == "":
                 break
             else:
+                # create instance of location
+                location = Locations(area, value)
                 # execute insert query
-                cur.execute('INSERT INTO postcodes (Postcode,Area) VALUES (%s,%s)', (value, area))
+                db.session.add(location)
                 # commit query
-                db.commit()
-                # close connection
-
-    db.close()
+    db.session.commit()
