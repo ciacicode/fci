@@ -8,12 +8,9 @@ import xml.etree.ElementTree as ET
 from urllib2 import urlopen
 import json
 import re
-import config
-import MySQLdb
 import db_models
 from datetime import datetime
 import string
-import pdb
 
 
 def post_to_area(postcode):
@@ -87,15 +84,6 @@ def resources_list(url):
     return final_list
 
 
-def find_xml(postcode):
-    """
-       input a postcode returns dict of
-       xml URL of area(s)
-    """
-    p_postcode = post_to_area(postcode)
-    url_xml = db_models.FciSources.query.filter_by(area=p_postcode).first()
-    return url_xml
-
 
 def fci_calculate(postcode):
     """
@@ -109,32 +97,29 @@ def fci_calculate(postcode):
     zone_input = post_to_area(postcode)
     keys = ("CHICKEN", "CHICK", "FRIED")
     no_keys = "NANDO"
-    xml_dict = find_xml(zone_input)
+    url = db_models.find_xml(zone_input)
     # unpack URLs from xml_dict
-    for value in xml_dict.values():
-        # each value is a tuple
-        # parse the url with the etree library
-        u = urlopen(value[0])
-        tree = ET.parse(u)
-        root = tree.getroot()
-        collection = root.find('EstablishmentCollection')
-        for detail in collection.findall('EstablishmentDetail'):
-            xml_postcode = detail.findtext('PostCode')
-            if xml_postcode is not None:
-                zone_xml = post_to_area(xml_postcode)
-                if zone_input == zone_xml:
-                    restaurant_count += 1
-                    business_name = detail.find('BusinessName').text
-                    upper_business_name = business_name.upper()
-                    if upper_business_name == '':
-                        break
-                    elif no_keys in upper_business_name:
-                        break
-                    else:
-                        for key in keys:
-                            if key in upper_business_name:
-                                fci_count += 1
-                                break
+    u = urlopen(url)
+    tree = ET.parse(u)
+    root = tree.getroot()
+    collection = root.find('EstablishmentCollection')
+    for detail in collection.findall('EstablishmentDetail'):
+        xml_postcode = detail.findtext('PostCode')
+        if xml_postcode is not None:
+            zone_xml = post_to_area(xml_postcode)
+            if zone_input == zone_xml:
+                restaurant_count += 1
+                business_name = detail.find('BusinessName').text
+                upper_business_name = business_name.upper()
+                if upper_business_name == '':
+                    break
+                elif no_keys in upper_business_name:
+                    break
+                else:
+                    for key in keys:
+                        if key in upper_business_name:
+                            fci_count += 1
+                            break
     if restaurant_count == 0:
         return fci_count
     else:
@@ -142,16 +127,5 @@ def fci_calculate(postcode):
         return result
 
 
-def fci_return(postcode):
-    """
-        receives postcode
-        returns formatted fci
-    """
-    # normalise input
-    postcode = post_to_area(postcode)
-    fci = db_models.FciIndex.query.filter_by(postcode=postcode).first()
-    if fci is None:
-        return 'There is no FCI for this area'
-    else:
-        return "{0:.3f}%".format(fci * 100)
+
 

@@ -4,7 +4,6 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from datetime import datetime
 import fciUtils
-import pdb
 
 app = Flask(__name__)
 app.config.from_pyfile('fci.cfg')
@@ -108,3 +107,54 @@ def update_locations():
                 db.session.add(location)
                 # commit query
     db.session.commit()
+
+
+def update_fci():
+    '''
+        updates the fciindex table
+    '''
+    results = db.session.query(Locations.postcode)
+    results = results.all()
+    postcodes = sorted(set(results))
+    maximum = 0.0
+    fci_dict = dict()
+    for p in postcodes:
+        p = str(p[0])
+        fci = fciUtils.fci_calculate(p)
+        fci_dict[p] = fci
+        if fci > maximum:
+            maximum = fci
+
+    # time to write in the table
+    for key, value in fci_dict.iteritems():
+        fci = (value/maximum)*100
+        record = FciIndex(key, fci)
+        db.session.add(record)
+    db.session.commit()
+
+
+def find_xml(postcode):
+    """
+       input a postcode returns dict of
+       xml URL of area(s)
+    """
+    p_postcode = fciUtils.post_to_area(postcode)
+    location = Locations.query.filter_by(postcode= p_postcode).first()
+    area = location.area
+    source = FciSources.query.filter_by(area=area).first()
+    url_xml = source.url
+    return url_xml
+
+
+def fci_return(postcode):
+    """
+        receives postcode
+        returns formatted fci
+    """
+    # normalise input
+    postcode = fciUtils.post_to_area(postcode)
+    fci = FciIndex.query.filter_by(postcode=postcode).first()
+    if fci.fci is None:
+        return 'There is no FCI for this area'
+    else:
+        return "{0:.2f}".format(fci.fci)
