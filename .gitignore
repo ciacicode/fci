@@ -65,3 +65,8 @@ config.py
 # Images
 *.png
 *.ico
+
+#Databases
+
+*.db
+*.cfg

@@ -8,9 +8,9 @@ import xml.etree.ElementTree as ET
 from urllib2 import urlopen
 import json
 import re
-import config
-import MySQLdb
-import pdb
+import db_models
+from datetime import datetime
+import string
 
 
 def post_to_area(postcode):
@@ -24,11 +24,6 @@ def post_to_area(postcode):
         return postcode
     else:
         return postcode
-
-
-def connect_fci_db():
-    """handles mysql db connection to fci database"""
-    return MySQLdb.connect(host=config.host, user=config.user, passwd=config.password, db=config.database);
 
 
 def postcodes_dict(url, area_name):
@@ -58,59 +53,36 @@ def postcodes_dict(url, area_name):
     return output_dict
 
 
-def resources_dict(url):
+def resources_list(url):
     """
         input url of json formatted data
-        output dict
-        { 'area': {'last_modified', 'url'}}
+        output list
+        crete a list of FciSources database objects
     """
     read_data = urlopen(url)
     json_simple = json.load(read_data)
     json_encoded = json.dumps(json_simple)
     json_decoded = json.loads(json_encoded)
-    resources_dict= dict()
+    resources_list= list()
+    final_list = list()
     for key in json_decoded.keys():
         if key == 'resources':
             # dive into the resources
             resources_list = json_decoded['resources']
     for entry in resources_list:
-        nest_dict = dict()
-        nest_dict['last_modified'] = entry['last_modified']
-        nest_dict['url'] = entry['url']
-        resources_dict[entry['description']] = nest_dict
-    return resources_dict
+        last_modified = entry['last_modified']
+        # Remove the bloody T from the date
+        last_modified = string.split(last_modified,'T')
+        day = last_modified[0]
+        hours = last_modified[1]
+        dt_last_modified = day + " " + hours
+        dt_last_modified = datetime.strptime(dt_last_modified, "%Y-%m-%d %H:%M:%S.%f")
+        url = entry['url']
+        area = entry['description']
+        source = db_models.FciSources(area, url, dt_last_modified)
+        final_list.append(source)
+    return final_list
 
-
-def find_xml(postcode):
-    """
-       input a postcode returns dict of
-       xml URL of area(s)
-    """
-    # connect to database
-    p_postcode = post_to_area(postcode)
-    db = connect_fci_db()
-    cur = db.cursor()
-    cur.execute('SELECT Area FROM fci_data.ordered_postcodes WHERE Postcode=(%s)', [p_postcode])
-    db.commit()
-    # create lists for the output
-    nest_area_list = list()
-    output_area_list = list()
-    for item in cur.fetchall():
-        nest_area_list.append(item)
-        for i in nest_area_list:
-            for x in i:
-                output_area_list.append(x)
-    output_area_list = set(output_area_list)
-    output_area_list = list(output_area_list)
-    # let us find the URLs of the xml data from the
-    output_xml_dict = dict()
-    for item in output_area_list:
-        cur.execute('SELECT URL FROM fci_data.sources WHERE Area =(%s)', [item])
-        db.commit()
-        for entry in cur.fetchall():
-            output_xml_dict[item] = entry
-    db.close()
-    return output_xml_dict
 
 
 def fci_calculate(postcode):
@@ -121,37 +93,33 @@ def fci_calculate(postcode):
 
     # create fci counter
     fci_count = 0
-    fci_index = 0
     restaurant_count = 0
     zone_input = post_to_area(postcode)
     keys = ("CHICKEN", "CHICK", "FRIED")
     no_keys = "NANDO"
-    xml_dict = find_xml(zone_input)
+    url = db_models.find_xml(zone_input)
     # unpack URLs from xml_dict
-    for value in xml_dict.values():
-        # each value is a tuple
-        # parse the url with the etree library
-        u = urlopen(value[0])
-        tree = ET.parse(u)
-        root = tree.getroot()
-        collection = root.find('EstablishmentCollection')
-        for detail in collection.findall('EstablishmentDetail'):
-            xml_postcode = detail.findtext('PostCode')
-            if xml_postcode is not None:
-                zone_xml = post_to_area(xml_postcode)
-                if zone_input == zone_xml:
-                    restaurant_count += 1
-                    business_name = detail.find('BusinessName').text
-                    upper_business_name = business_name.upper()
-                    if upper_business_name == '':
-                        break
-                    elif no_keys in upper_business_name:
-                        break
-                    else:
-                        for key in keys:
-                            if key in upper_business_name:
-                                fci_count += 1
-                                break
+    u = urlopen(url)
+    tree = ET.parse(u)
+    root = tree.getroot()
+    collection = root.find('EstablishmentCollection')
+    for detail in collection.findall('EstablishmentDetail'):
+        xml_postcode = detail.findtext('PostCode')
+        if xml_postcode is not None:
+            zone_xml = post_to_area(xml_postcode)
+            if zone_input == zone_xml:
+                restaurant_count += 1
+                business_name = detail.find('BusinessName').text
+                upper_business_name = business_name.upper()
+                if upper_business_name == '':
+                    break
+                elif no_keys in upper_business_name:
+                    break
+                else:
+                    for key in keys:
+                        if key in upper_business_name:
+                            fci_count += 1
+                            break
     if restaurant_count == 0:
         return fci_count
     else:
@@ -159,27 +127,5 @@ def fci_calculate(postcode):
         return result
 
 
-def fci_return(postcode):
-    """
-        receives postcode
-        returns formatted fci
-    """
-    # normalise input
-    postcode = post_to_area(postcode)
-    # connect to database and create cursor
-    db = connect_fci_db()
-    cur = db.cursor()
-    # check if there is already an entry in the database for that postcode
-    # pdb.set_trace()
-    cur.execute("SELECT FCI FROM fciIndex WHERE Postcode=(%s)", [postcode])
-    db.commit()
-    data = cur.fetchall()
-    db.close()
-    if len(data) == 0:
-        no_data = 'There is no FCI data for this area'
-        return str(no_data)
-    else:
-        data = data[0]
-        data = data[0]
-        return "{0:.3f}%".format(data * 100)
+
 
