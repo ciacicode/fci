@@ -126,6 +126,3 @@ def fci_calculate(postcode):
         result = fci_count/restaurant_count
         return result
 
-
-
-

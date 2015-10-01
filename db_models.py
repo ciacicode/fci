@@ -15,8 +15,7 @@ class Locations(db.Model):
         Defines the columns and keys for Locations table
     """
     id = db.Column(db.Integer, primary_key=True)
-    postcode = db.Column(db.String(10))
-    #fci_index = db.relationship('FciIndex', backref=db.backref('locations', lazy='dynamic'))
+    postcode = db.Column(db.String(10))/
     area = db.Column(db.String(50))
 
     def __init__(self, area, postcode):
