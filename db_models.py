@@ -4,6 +4,7 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from datetime import datetime
 import fciUtils
+import pdb
 
 app = Flask(__name__)
 app.config.from_pyfile('fci.cfg')
@@ -158,3 +159,24 @@ def fci_return(postcode):
         return 'There is no FCI for this area'
     else:
         return "{0:.2f}".format(fci.fci)
+
+def fci_object_return(postcode):
+    """
+
+    :param postcode:
+    :return: the entire fci object
+    """
+    postcode = fciUtils.post_to_area(postcode)
+    fci_object = FciIndex.query.filter_by(postcode=postcode).first()
+    return fci_object
+
+def postcodes_return():
+    """
+
+    :return: all postcodes for which we have an fci value
+    """
+    postcodes = db.session.query(FciIndex.postcode)
+    all_postcodes = postcodes.all()
+    j_object = dict()
+    j_object["postcodes"] = all_postcodes
+    return j_object
