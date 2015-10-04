@@ -68,6 +68,8 @@ class FciSources(db.Model):
         return 'Source for %r was last modified on %r' % (self.area, self.last_modified)
 
 
+# Functions to update or search databases
+
 def update_sources():
     """
         performs database update of the FciSources table
@@ -160,23 +162,42 @@ def fci_return(postcode):
     else:
         return "{0:.2f}".format(fci.fci)
 
+
 def fci_object_return(postcode):
     """
 
     :param postcode:
     :return: the entire fci object
     """
+    fci_object = dict()
     postcode = fciUtils.post_to_area(postcode)
-    fci_object = FciIndex.query.filter_by(postcode=postcode).first()
+    query_object = FciIndex.query.filter_by(postcode=postcode).first()
+    fci_object['postcode'] = query_object.postcode
+    fci_object['fci'] = query_object.fci
+    fci_date = query_object.date
+    fci_object['last_updated'] = fci_date.strftime("%Y-%m-%d")
     return fci_object
+
 
 def postcodes_return():
     """
-
     :return: all postcodes for which we have an fci value
     """
     postcodes = db.session.query(FciIndex.postcode)
     all_postcodes = postcodes.all()
+    postcode_list = list()
+    for postcode in all_postcodes:
+        postcode_list.append(postcode[0])
     j_object = dict()
-    j_object["postcodes"] = all_postcodes
+    j_object["postcodes"] = postcode_list
     return j_object
+
+
+def find_max():
+    """
+    :return: the fci object that is found to be the highest
+    """
+    query_object = FciIndex.query.filter_by(fci=100).first()
+    max_postcode = query_object.postcode
+    maximum_fci = fci_object_return(max_postcode)
+    return maximum_fci
