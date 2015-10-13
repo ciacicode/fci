@@ -70,3 +70,6 @@ config.py
 
 *.db
 *.cfg
+
+#csv
+fciindex.csv
