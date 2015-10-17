@@ -66,9 +66,13 @@ fci_config.py
 *.png
 *.ico
 
+
 #Databases
 
 *.db
 *.cfg
 *.csv
 
+#Cached files
+*.md~
+.gitignore~
