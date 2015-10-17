@@ -1,27 +1,31 @@
 __author__ = 'ciacicode'
 
-from flask import Flask, url_for
+
 from flask import request
-from flask import json
-from flask import Response
-import pdb
 from flask import jsonify
-from endpoints import fci
 from db_models import *
-from fciUtils import *
-
-app = Flask(__name__)
 
 
-@app.route('/')
+@app.route('/api')
 def api_root():
-    return "Welcome"
+    resp = jsonify({
+        "description": "This is the home of khaleesicode apis",
+        "apis":
+                {
+                    "api": "Fried Chicken Index",
+                    "description": "Returns FCI for a given postcode",
+                    "endpoint": "/api/fci",
+                }
+
+    })
+    return resp
 
 
-@app.route('/fci')
+@app.route('/api/fci')
 def api_fci():
     """
-    :return: in case of no parameters given it returns the entire mapping of the api endpoints. if a postcode is provided in the form of a gest parameter, it will return the value of the resource
+    :return: in case of no parameters given it returns the entire mapping of the api endpoints. if a postcode is provided
+     in the form of a gest parameter, it will return the value of the resource
     """
     all_postcodes = postcodes_return()
     all_postcodes = all_postcodes['postcodes']
@@ -36,12 +40,30 @@ def api_fci():
         else:
             return not_found()
     else:
-        resp = jsonify(fci.fci_api_mapping)
+        resp = jsonify(
+            {
+    "url": "http://www.khaleesicode.com/api/fci",
+    "description": "Returns FCI value for a given postcode as GET parameter api.mysite.com/fci?postcode=<postcode>",
+    "resources": {
+        "postcodes": {
+            "url": "http://www.khaleesicode.com/api/fci/postcodes",
+            "description":"Returns list of postcodes comprised in the FCI"
+        },
+        "history": {
+            "url": "http://www.khaleesicode.com/api/fci/history",
+            "description": "Returns the known history of FCI values for a given postcode. It requires GET parameter postcode as api.mysite.com/fci/history?postcode=<postcode>"
+        },
+        "maximum": {
+            "url": "http://www.khaleesicode.com/api/fci/maximum",
+            "description": "Returns the postcode associated with the maximum value of FCI as of latest available information",
+        },
+    },
+})
         resp.status_code = 200
         return resp
 
 
-@app.route('/fci/postcodes')
+@app.route('/api/fci/postcodes')
 def api_postcodes():
     """
 
@@ -64,8 +86,7 @@ def not_found(error=None):
 
     return resp
 
-
-@app.route('/fci/maximum')
+@app.route('/api/fci/maximum')
 def api_maximum():
     """
 
@@ -75,7 +96,3 @@ def api_maximum():
     resp = jsonify(resp)
     resp.status_code = 200
     return resp
-
-
-if __name__ == '__main__':
-    app.run(debug=True)

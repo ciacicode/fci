@@ -3,41 +3,36 @@
 This is a python project to create an application that calculates a London area's Fried Chicken Index (FCI).
 The FCI is calculated based on instances of fried chicken shops in the area. The front-end of this app is done with flask and can be found in the khaleesicode repo
 
-## Requirements
-* Python 2.7
-* MySQL
-* Flask
-* SQLAlchemy > 0.6
-* Flask-SQLAlchemy
+## Installation with Anaconda
 
-## Databases Tables
-fci_data.sources|fci_data.postcodes|fci_data.ordered_postcodes|fci_data.fciIndex|
-----------------|------------------|--------------------------|-----------------|
-ID	int(11) Area	varchar(255) LastModified	varchar(255) URL	varchar(255)|Postcode	varchar(15) Area	varchar(255) | Postcode	varchar(15)Area	varchar(255)|Postcode	varchar(15) FCI	float
+### 1. Install Anaconda
+Follow instructions at http://docs.continuum.io/anaconda/install
 
-## List of custom libraries
-* fciUtils.py
+### 2. Create your virtual environment with Conda
+http://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/
 
-The functions included in fciUtils take care of database update and maintenance for the application. There are also small helper functions to normalise input.
+### 3. Clone this repository
+Open your terminal, navigate to the directory where you want to save this project and execute:```git clone https://github.com/ciacicode/fci.git```
 
-## Installation and use
+### 4. Install requirements
+Activate your virtual environment, make sure you are in the fci folder and then execute from the terminal ```pip install -r requirements.txt```
+This command tells pip to install recursively all the rows of the file requirements.txt which includes packages I use for my environment.
 
-Clone the repository in the chosen directory:
-``` git clone https://github.com/ciacicode/fci.git ```
-
-Set up the environment so that you have all required modules as listed above in the Requirements section.
-
-### Step 1: Update Sources
-After setting up the databases on your localhost, define variables in the config.py file. Those variables will be used to connect to the database. The process starts with the function ```update_sources() ``` in the updateSources.py script. The function starts off building the table fci_data.sources based on the content of the xml returned by the Food Hygiene API for London. The fci_data.sources table always contains the freshest data in terms of links to the individual areas information.
-
-### Step 2: Update list of postcodes
-After updating the sources we can make sure we have a fresh list of related postcodes. This is possible by running the script in updatePostcodes.py. This script updates the fci_data.postcodes table, while the script called orderedPostcodes, makes sure we create another table of ordered postcodes. This is a flaw in design as we could simply sort the postcode table and rewrite it there but for the moment I do not care.
-
-### Step 3: Update the fciIndex table
-After the postcodes are all set in their tables it is only necessary to run the ```update_fci()``` function in the updateFciIndex.py file to refresh the table with new fci data.
+## Running
+While your environment is active, you can populate all databases with the necessary information with only one function. This is a lengthy process so leave the computer connected for a while (up to 1 hour) while the function executes. In your terminal now activate the python interpreter of your virtual environment:
+```(myenv)user@mylinuxmachine:~ /MyPath/to/the/project$ python ```
+Then within your interpreter:
+```
+    >>>  from db_models import *
+    >>>  fci_set_up()
+```
+Now let the function run. When the process is over you can query the value of teh fried chicken index for your London postcode as
+```
+    >>> fci_return("<london_postcode>")
+```
 
 ### Notes
-At the moment the database structure is not taking into consideration historical data.
+This works only for London and Greater Londona areas
 
 
 

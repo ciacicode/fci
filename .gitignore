@@ -60,7 +60,7 @@ docs/_build/
 target/
 
 # Database details
-config.py
+fci_config.py
 
 # Images
 *.png
